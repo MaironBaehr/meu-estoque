@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <title>Criar Conta - Gestão de Estoque</title>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; padding-top: 50px; background: #f0f2f5; }
+        .box { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); width: 300px; text-align: center; }
+        input { display: block; margin: 10px auto; padding: 10px; width: 90%; border: 1px solid #ccc; border-radius: 4px; }
+        button { width: 98%; padding: 10px; background: #007bff; color: white; border: none; cursor: pointer; border-radius: 4px; margin-top: 10px; }
+        a { display: block; margin-top: 15px; color: #007bff; text-decoration: none; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h2>Criar Nova Conta</h2>
+        <form method="POST">
+            <input type="text" name="usuario" placeholder="Escolha um nome de usuário" required>
+            <input type="password" name="senha" placeholder="Crie uma senha" required>
+            <button type="submit">Cadastrar</button>
+        </form>
+        <a href="/">Já tenho conta (Fazer Login)</a>
+    </div>
+</body>
+</html>

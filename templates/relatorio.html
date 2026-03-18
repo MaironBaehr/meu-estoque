@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <title>Relatório de Movimentações</title>
+    <style>
+        body { font-family: sans-serif; background: #f4f7f6; padding: 20px; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #007bff; color: white; }
+        .somar { color: #28a745; font-weight: bold; }
+        .subtrair { color: #dc3545; font-weight: bold; }
+        .filtro-box { background: #eee; padding: 15px; border-radius: 5px; margin-bottom: 20px; display: flex; gap: 10px; align-items: center;}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>📊 Relatório de Movimentações</h2>
+        <a href="/estoque" style="color: #007bff; text-decoration: none;">← Voltar para o Estoque</a>
+        <br><br>
+
+        <form method="GET" action="/relatorio" class="filtro-box">
+            <label>Data Início:</label>
+            <input type="date" name="data_inicio" value="{{ data_inicio }}" required>
+            
+            <label>Data Fim:</label>
+            <input type="date" name="data_fim" value="{{ data_fim }}" required>
+            
+            <button type="submit" style="background: #007bff; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer;">Gerar Relatório</button>
+            <a href="/relatorio" style="margin-left: 10px; color: #666;">Limpar Filtro</a>
+        </form>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Data e Hora</th>
+                    <th>Usuário</th>
+                    <th>Ação</th>
+                    <th>Produto</th>
+                    <th>Qtd</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in registros %}
+                <tr>
+                    <td>{{ r.data }}</td>
+                    <td style="text-transform: uppercase;">{{ r.usuario }}</td>
+                    <td>
+                        {% if r.acao == 'somar' %}
+                            <span class="somar">Adicionou (+)</span>
+                        {% else %}
+                            <span class="subtrair">Retirou (-)</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ r.produto }}</td>
+                    <td>{{ r.quantidade }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" style="text-align: center;">Nenhuma movimentação encontrada neste período.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

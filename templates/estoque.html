@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Estoque Pro</title>
+    <style>
+        :root {
+            --primary: #007bff;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
+            --light: #f8f9fa;
+            --dark: #343a40;
+        }
+
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; color: var(--dark); }
+        .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--light); padding-bottom: 15px; margin-bottom: 20px; }
+        .logout-btn { text-decoration: none; color: var(--danger); font-weight: bold; border: 1px solid var(--danger); padding: 5px 15px; border-radius: 5px; transition: 0.3s; }
+        .logout-btn:hover { background: var(--danger); color: white; }
+
+        /* Estilo dos Cards de Produto */
+        .item-card { 
+            display: flex; justify-content: space-between; align-items: center; 
+            background: #fff; padding: 15px; margin-bottom: 10px; 
+            border-radius: 8px; border-left: 6px solid var(--primary);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: transform 0.2s;
+        }
+        .item-card:hover { transform: translateY(-2px); }
+        .item-favorito { border-left-color: var(--warning) !important; background: #fffdf0; }
+        
+        /* Ícones e Tags */
+        .fav-btn { text-decoration: none; font-size: 1.2rem; margin-right: 10px; transition: 0.2s; }
+        .fav-on { color: var(--warning); }
+        .fav-off { color: #ccc; }
+        .admin-tag { font-size: 0.7rem; background: #eee; padding: 2px 5px; border-radius: 3px; color: #666; vertical-align: middle; }
+
+        /* Formulários e Inputs */
+        .section-box { background: var(--light); padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e0e0e0; }
+        input, select, button { padding: 10px; border-radius: 5px; border: 1px solid #ddd; font-size: 14px; }
+        .form-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+        
+        .btn-add { background: var(--success); color: white; border: none; cursor: pointer; flex: 1; }
+        .btn-rem { background: var(--danger); color: white; border: none; cursor: pointer; flex: 1; }
+        .btn-filter { background: var(--primary); color: white; border: none; cursor: pointer; }
+
+        ul { list-style: none; padding: 0; }
+        h3 { border-left: 4px solid var(--primary); padding-left: 10px; margin-top: 30px; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+        <div>
+            <h1 style="margin:0; font-size: 1.5rem;">📦 Gestão de Estoque</h1>
+            <p style="margin:0; color: #666;">Olá, <strong>{{ usuario.upper() }}</strong></p>
+        </div>
+        <div style="display: flex; gap: 15px; align-items: center;">
+            {% if usuario == 'admin' %}
+                <a href="/cadastro" style="text-decoration: none; color: var(--primary); font-weight: bold;">+ Novo Usuário</a>
+                <a href="/relatorio" style="text-decoration: none; color: var(--primary); font-weight: bold;">📊 Relatório</a>
+            {% endif %}
+            
+            <a href="/logout" class="logout-btn">Sair do Sistema</a>
+        </div>
+    </div>
+
+    <form method="GET" action="/estoque" class="section-box">
+        <div style="display: flex; gap: 10px;">
+            <input type="text" name="q" placeholder="Buscar produto pelo nome..." value="{{ busca }}" style="flex: 3;">
+            <label style="display: flex; align-items: center; gap: 5px; font-size: 13px; flex: 1; cursor: pointer;">
+                <input type="checkbox" name="disponivel" value="true" {% if so_disponivel %}checked{% endif %} onchange="this.form.submit()">
+                Em estoque
+            </label>
+            <button type="submit" class="btn-filter">🔍 Filtrar</button>
+        </div>
+    </form>
+
+    {% if usuario == 'admin' %}
+    <div class="section-box" style="border-left: 5px solid var(--dark);">
+        <h4 style="margin-top:0;">Visualizar Estoque de:</h4>
+        <form method="GET" action="/estoque">
+            <select name="filtro_usuario" onchange="this.form.submit()" style="width: 100%;">
+                <option value="todos">-- Todos os Usuários --</option>
+                {% for u in lista_usuarios %}
+                    <option value="{{ u }}">{{ u.upper() }}</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+    {% endif %}
+
+    <div class="section-box">
+        <h4 style="margin-top:0;">Fazer Lançamento</h4>
+        <form method="POST" class="form-row">
+            {% if usuario == 'admin' %}
+                <input type="text" name="produto" placeholder="Nome do Produto (Catálogo)" required style="flex: 2;">
+            {% else %}
+                <select name="produto_selecionado" required style="flex: 2;">
+                    <option value="">Selecione um produto...</option>
+                    {% for item in catalogo %}
+                        <option value="{{ item }}">{{ item }}</option>
+                    {% endfor %}
+                </select>
+            {% endif %}
+            
+            <input type="number" name="quantidade" placeholder="Qtd" required min="1" style="width: 80px;">
+            <button type="submit" name="acao" value="somar" class="btn-add">Entrada (+)</button>
+            <button type="submit" name="acao" value="subtrair" class="btn-rem">Saída (-)</button>
+        </form>
+    </div>
+
+    {% if usuario == 'admin' %}
+    <div style="margin-bottom: 20px; padding: 10px; border: 1.5px dashed var(--primary); border-radius: 8px; text-align: center;">
+        <form action="/importar_excel" method="POST" enctype="multipart/form-data">
+            <span style="font-size: 13px; color: var(--primary);">Importar Planilha (.xlsx): </span>
+            <input type="file" name="file" accept=".xlsx" required>
+            <button type="submit" style="background: var(--dark); color: white; padding: 5px 15px;">Upload</button>
+        </form>
+    </div>
+    {% endif %}
+
+    <h3>Produtos em Lista</h3>
+    <ul>
+        {% for dono, itens in estoque.items() %}
+            {% for nome, qtd in itens.items() | sort %}
+                
+                {# Lógica de Filtro no HTML #}
+                {% set mostrar = true %}
+                {% if busca and busca not in nome.lower() %}{% set mostrar = false %}{% endif %}
+                {% if so_disponivel and qtd <= 0 %}{% set mostrar = false %}{% endif %}
+
+                {% if mostrar %}
+                <li class="item-card {% if nome in favoritos %}item-favorito{% endif %}" 
+    onclick="preencherFormulario('{{ nome }}')" 
+    style="cursor: pointer;" 
+    title="Clique para selecionar este produto">
+    
+    <div>
+        <a href="/favoritar/{{ nome }}" 
+           class="fav-btn {% if nome in favoritos %}fav-on{% else %}fav-off{% endif %}" 
+           onclick="event.stopPropagation();">
+            ★
+        </a>
+        
+        {% if usuario == 'admin' %}<span class="admin-tag">{{ dono }}</span>{% endif %}
+        <span style="font-weight: 500; margin-left: 5px;" id="nome-{{ loop.index }}">{{ nome }}</span>
+    </div>
+
+    <div style="text-align: right;">
+        <span style="font-size: 1.1rem; font-weight: bold; color: {% if qtd > 0 %}var(--success){% else %}var(--danger){% endif %};">
+            {{ qtd }}
+        </span>
+        <small style="color: #888;"> un</small>
+    </div>
+</li>
+                {% endif %}
+            {% endfor %}
+        {% endfor %}
+    </ul>
+</div>
+
+<script>
+function preencherFormulario(nomeProduto) {
+    // Tenta encontrar o campo de texto (se for Admin)
+    const campoTexto = document.querySelector('input[name="produto"]');
+    // Tenta encontrar o menu de seleção (se for Usuário Comum)
+    const campoSelect = document.querySelector('select[name="produto_selecionado"]');
+
+    if (campoTexto) {
+        campoTexto.value = nomeProduto;
+        // Foca no campo de quantidade para agilizar
+        document.querySelector('input[name="quantidade"]').focus();
+    } else if (campoSelect) {
+        campoSelect.value = nomeProduto;
+        document.querySelector('input[name="quantidade"]').focus();
+    }
+    
+    // Pequeno efeito visual para mostrar que foi selecionado
+    console.log("Selecionado: " + nomeProduto);
+}
+</script>
+
+</body>
+</html>
